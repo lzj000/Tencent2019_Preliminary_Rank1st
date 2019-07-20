@@ -5,7 +5,7 @@ import random
 import gc
 import time
 from tqdm import tqdm
-
+##preprocess对原始数据每一列数据的类型进行了转换
 def parse_rawdata():
     #曝光日志
     df=pd.read_csv('data/testA/totalExposureLog.out', sep='\t',names=['id','request_timestamp','position','uid','aid','imp_ad_size','bid','pctr','quality_ecpm','totalEcpm']).sort_values(by='request_timestamp')
@@ -55,28 +55,28 @@ def parse_rawdata():
 def construct_log():
     #构造曝光日志，分别有验证集的log和测试集的log
     train_df=pd.read_pickle('data/testA/totalExposureLog.pkl')
-    train_df['request_day']=train_df['request_timestamp']//(3600*24)
+    train_df['request_day']=train_df['request_timestamp']//(3600*24)#由时间戳得到时间数据
     wday=[]
     hour=[]
     minute=[]
     for x in tqdm(train_df['request_timestamp'].values,total=len(train_df)):
         localtime=time.localtime(x)
-        wday.append(localtime[6])
+        wday.append(localtime[6])#拆分时间数据得到day,hour,minute数据
         hour.append(localtime[3])
         minute.append(localtime[4])
     train_df['wday']=wday
     train_df['hour']=hour
     train_df['minute']=minute
-    train_df['period_id']=train_df['hour']*2+train_df['minute']//30
+    train_df['period_id']=train_df['hour']*2+train_df['minute']//30#因为半小时进行一次更新，所以一天分为24个period_id
     dev_df=train_df[train_df['request_day']==17974]
     del dev_df['period_id']
     del dev_df['minute']
     del dev_df['hour']
     log=train_df
     tmp = pd.DataFrame(train_df.groupby(['aid','request_day']).size()).reset_index()
-    tmp.columns=['aid','request_day','imp']
+    tmp.columns=['aid','request_day','imp']#每个广告每天的曝光量
     log=log.merge(tmp,on=['aid','request_day'],how='left')
-    log[log['request_day']<17973].to_pickle('data/user_log_dev.pkl')
+    log[log['request_day']<17973].to_pickle('data/user_log_dev.pkl')#17973时间点用于划分训练集测试集
     log.to_pickle('data/user_log_test.pkl')
     del log
     del tmp
@@ -90,7 +90,7 @@ def extract_setting():
     aids=[]
     with open('data/testA/ad_operation.dat','r') as f:
         for line in f:
-            line=line.strip().split('\t')
+            line=line.strip().split('\t')#广告id,修改创建时间，修改类型，修改的字段，修改字段的值
             try:
                 if line[1]=='20190230000000':
                     line[1]='20190301000000'
@@ -102,7 +102,7 @@ def extract_setting():
                 print(line[1])
 
             if len(aids)==0:
-                aids.append([int(line[0]),0,"NaN","NaN"])
+                aids.append([int(line[0]),0,"NaN","NaN"])#记录每一个广告的状态['aid','request_day','crowd_direction','delivery_periods']
             elif aids[-1][0]!=int(line[0]):
                 for i in range(max(17930,aids[-1][1]+1),17975):
                     aids.append(aids[-1].copy())
