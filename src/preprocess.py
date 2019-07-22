@@ -125,15 +125,15 @@ def extract_setting():
 def construct_train_data(train_df):
     #构造训练集
     #算出广告当天平均出价和曝光量
-    tmp = pd.DataFrame(train_df.groupby(['aid','request_day'])['bid'].nunique()).reset_index()
+    tmp = pd.DataFrame(train_df.groupby(['aid','request_day'])['bid'].nunique()).reset_index()#某个广告在某天出现的不同的出价有几个
     tmp.columns=['aid','request_day','bid_unique']
     train_df=train_df.merge(tmp,on=['aid','request_day'],how='left')
-    tmp = pd.DataFrame(train_df.groupby(['aid','request_day']).size()).reset_index()
-    tmp_1 = pd.DataFrame(train_df.groupby(['aid','request_day'])['bid'].mean()).reset_index()
+    tmp = pd.DataFrame(train_df.groupby(['aid','request_day']).size()).reset_index()#某个广告在某天的请求数是多少
+    tmp_1 = pd.DataFrame(train_df.groupby(['aid','request_day'])['bid'].mean()).reset_index()#某个广告在某天出现的出价均值是多少
     tmp.columns=['aid','request_day','imp']
     del train_df['bid']
     tmp_1.columns=['aid','request_day','bid']
-    train_df=train_df.drop_duplicates(['aid','request_day'])
+    train_df=train_df.drop_duplicates(['aid','request_day'])#去重 
     train_df=train_df.merge(tmp,on=['aid','request_day'],how='left')
     train_df=train_df.merge(tmp_1,on=['aid','request_day'],how='left')
     del tmp
@@ -154,7 +154,7 @@ def construct_train_data(train_df):
     train_df=train_df[train_df['crowd_direction']!="NaN"]
     train_df=train_df[train_df['delivery_periods']!="NaN"]
 
-    #过滤出价和曝光过高的广告
+    #过滤离群点
     train_df=train_df[train_df['imp']<=3000]
     train_df=train_df[train_df['bid']<=1000]
     train_dev_df=train_df[train_df['request_day']<17973]
@@ -187,9 +187,9 @@ def construct_dev_data(dev_df):
     tmp = pd.DataFrame(dev_df.groupby('aid')['bid'].nunique()).reset_index()
     tmp.columns=['aid','bid_unique']
     dev_df=dev_df.merge(tmp,on='aid',how='left')
-    dev_df=dev_df[dev_df['bid_unique']==1]
+    dev_df=dev_df[dev_df['bid_unique']==1]#出价只有一个
     #统计广告当天的曝光量
-    tmp = pd.DataFrame(dev_df.groupby('aid').size()).reset_index()
+    tmp = pd.DataFrame(dev_df.groupby('aid').size()).reset_index()#统计曝光量
     tmp.columns=['aid','imp']
     dev_df=dev_df.merge(tmp,on='aid',how='left')
     dev_df=dev_df.drop_duplicates('aid')
@@ -197,7 +197,7 @@ def construct_dev_data(dev_df):
     ad_df=extract_setting()
     ad_df=ad_df.drop_duplicates(['aid'],keep='last')
     dev_df=dev_df.merge(ad_df,on='aid',how='left')
-    dev_df=dev_df[dev_df['crowd_direction']!="NaN"]
+    dev_df=dev_df[dev_df['crowd_direction']!="NaN"]#过滤
     dev_df=dev_df[dev_df['delivery_periods']!="NaN"].reset_index()
     del dev_df['index']
     del dev_df['request_timestamp']
