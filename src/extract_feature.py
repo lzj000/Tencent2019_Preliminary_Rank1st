@@ -152,7 +152,7 @@ def deepwalk(log,f1,f2,flag,L):
 def predict_periods(train_df,test_df,wday):
     #提取测试当天投放时段特征
     print("predict_periods features")    
-    #提取训练集的投放时段特征，分别有48维的01向量，和投放时段总数
+    #提取训练集的投放时段特征，得到48维的01向量，和投放时段总数
     items=[]
     for item in train_df[['wday','delivery_periods']].values:
         w=item[0]
@@ -169,7 +169,7 @@ def predict_periods(train_df,test_df,wday):
         temp.append(sum(temp))
         items.append(temp)
     df=pd.DataFrame(items)
-    df.columns=['periods_on_'+str(i) for i in range(48)]+['periods_cont']
+    df.columns=['periods_on_'+str(i) for i in range(48)]+['periods_cont']#批量生成columns
     for f in ['periods_on_'+str(i) for i in range(48)]+['periods_cont']:
         train_df[f]=df[f]
     del df
@@ -530,7 +530,7 @@ if __name__ == "__main__":
             print(train_df.shape,test_df.shape,log.shape)
        
             
-            #提取特征
+            ##提取特征
             
             #人群定向
             crowd_direction(train_df,test_df)
